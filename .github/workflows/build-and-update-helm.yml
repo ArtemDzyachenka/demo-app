@@ -46,7 +46,7 @@ jobs:
       - name: Clone Helm repo
         run: |
           # Клонируем репозиторий с использованием Personal Access Token
-          git clone https://x-access-token:${{ secrets.HELM_REPO_PAT }}@github.com/USERNAME/demo-app-helm.git helm-repo
+          git clone https://x-access-token:${{ secrets.HELM_REPO_PAT }}@github.com/ArtemDzyachenka/demo-app-helm.git helm-repo
           cd helm-repo
           git config user.name "github-actions"
           git config user.email "actions@github.com"
