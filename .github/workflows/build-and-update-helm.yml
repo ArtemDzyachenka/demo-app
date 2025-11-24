@@ -45,8 +45,8 @@ jobs:
 
       - name: Clone Helm repo
         run: |
-        # Клонируем репо с использованием GITHUB_TOKEN
-          git clone https://x-access-token:${{ secrets.HELM_REPO_PAT }}@github.com/USERNAME/demo-app-helm.git
+          # Клонируем репозиторий с использованием Personal Access Token
+          git clone https://x-access-token:${{ secrets.HELM_REPO_PAT }}@github.com/USERNAME/demo-app-helm.git helm-repo
           cd helm-repo
           git config user.name "github-actions"
           git config user.email "actions@github.com"
@@ -55,9 +55,8 @@ jobs:
         run: |
           cd helm-repo
           TAG=${{ env.TAG }}
-          # Обновляем тег образа в values.yaml
+          echo "Updating Helm image tag to $TAG"
           sed -i "s|^  tag:.*|  tag: ${TAG}|" values.yaml || true
           git add values.yaml
           git commit -m "ci: update image tag to ${TAG}" || echo "no changes to commit"
           git push origin HEAD
-
