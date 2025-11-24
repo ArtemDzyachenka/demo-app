@@ -16,26 +16,31 @@ jobs:
       IMAGE_REPO: ${{ secrets.DOCKER_USERNAME }}/demo-app
 
     steps:
+      # 1️⃣ Клонируем репозиторий с приложением
       - name: Checkout app repo
         uses: actions/checkout@v4
 
+      # 2️⃣ Получаем тег, по которому запустился workflow
       - name: Get tag name
         run: |
           echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
           echo "Using TAG=$GITHUB_REF_NAME"
 
+      # 3️⃣ Настройка QEMU и Buildx для Docker
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
 
       - name: Setup buildx
         uses: docker/setup-buildx-action@v2
 
+      # 4️⃣ Логинимся в Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # 5️⃣ Build и push Docker image
       - name: Build and push image
         run: |
           IMG=${IMAGE_REPO}:${TAG}
@@ -43,14 +48,23 @@ jobs:
           docker build -t $IMG .
           docker push $IMG
 
+      # 6️⃣ Настройка SSH для доступа к Helm репозиторию
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HELM_REPO_SSH_KEY }}" > ~/.ssh/id_ed25519_git
+          chmod 600 ~/.ssh/id_ed25519_git
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      # 7️⃣ Клонируем Helm репозиторий через SSH
       - name: Clone Helm repo
         run: |
-          # Клонируем репозиторий с использованием Personal Access Token
-          git clone https://x-access-token:${{ secrets.HELM_REPO_PAT }}@github.com/ArtemDzyachenka/demo-app-helm.git helm-repo
+          git clone git@github.com:ArtemDzyachenka/demo-app-helm.git helm-repo
           cd helm-repo
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
+      # 8️⃣ Обновляем values.yaml с новым тегом и пушим
       - name: Update values.yaml with new tag
         run: |
           cd helm-repo
